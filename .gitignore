@@ -1,6 +1,11 @@
 # Environment variables
 .env
 
+# Prevent nested git repositories (important: keeps backend/frontend as folders, not separate repos)
+**/.git/
+backend/.git/
+frontend/.git/
+
 # Node modules
 node_modules/
 frontend/node_modules/
