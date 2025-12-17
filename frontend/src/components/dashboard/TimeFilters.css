@@ -1,0 +1,35 @@
+.time-filters {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--bg-secondary);
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.time-filter-button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-filter-button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.time-filter-button.active {
+  background: var(--accent);
+  color: white;
+}
+
+.time-filter-button.active:hover {
+  background: var(--accent-hover);
+}
+
