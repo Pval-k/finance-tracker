@@ -10,9 +10,35 @@
   gap: 1rem;
 }
 
-.transaction-item:hover {
+/* Only apply hover to non-selectable items */
+.transaction-item:not(.selectable):hover {
   background: var(--bg-hover);
   border-color: var(--accent);
+}
+
+.transaction-item.selectable {
+  cursor: pointer;
+}
+
+/* For selectable items that are NOT selected - default to white */
+.transaction-item.selectable:not(.selected) {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+/* For selectable items that are selected - gray background */
+.transaction-item.selectable.selected {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.transaction-item.selectable:not(.selected):hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.transaction-item.hidden {
+  opacity: 0.6;
 }
 
 .transaction-main {

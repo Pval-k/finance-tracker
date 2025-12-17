@@ -21,10 +21,21 @@ const TransactionForm = ({
   const isCustomCategory =
     editingTransaction && !CATEGORIES.includes(editingTransaction.category);
 
+  // Get last used category from localStorage
+  const getLastUsedCategory = () => {
+    const lastCategory = localStorage.getItem("lastUsedCategory");
+    if (lastCategory && CATEGORIES.includes(lastCategory)) {
+      return lastCategory;
+    }
+    return ""; // Return empty string to show "Select a category"
+  };
+
   const [formData, setFormData] = useState({
     title: editingTransaction?.title || "",
     amount: editingTransaction?.amount || "",
-    category: isCustomCategory ? "Other" : editingTransaction?.category || "",
+    category: isCustomCategory
+      ? "Other"
+      : editingTransaction?.category || getLastUsedCategory(),
     customCategory: isCustomCategory ? editingTransaction?.category || "" : "",
     type: editingTransaction?.type || "expense",
     date: editingTransaction?.date || new Date().toISOString().split("T")[0],
@@ -39,7 +50,9 @@ const TransactionForm = ({
       setFormData({
         title: editingTransaction.title || "",
         amount: editingTransaction.amount || "",
-        category: isCustom ? "Other" : editingTransaction.category || "",
+        category: isCustom
+          ? "Other"
+          : editingTransaction.category || getLastUsedCategory(),
         customCategory: isCustom ? editingTransaction.category || "" : "",
         type: editingTransaction.type || "expense",
         date: editingTransaction.date || new Date().toISOString().split("T")[0],
@@ -49,7 +62,7 @@ const TransactionForm = ({
       setFormData({
         title: "",
         amount: "",
-        category: "",
+        category: getLastUsedCategory(),
         customCategory: "",
         type: "expense",
         date: new Date().toISOString().split("T")[0],
@@ -58,9 +71,24 @@ const TransactionForm = ({
     }
   }, [editingTransaction]);
 
+  const handleAmountBlur = (e) => {
+    const value = e.target.value;
+    if (value && !isNaN(value)) {
+      // Format to 2 decimal places
+      const numValue = parseFloat(value);
+      const formattedValue = numValue.toFixed(2);
+      setFormData((prev) => ({ ...prev, amount: formattedValue }));
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Capitalize first letter of transaction name
+    const processedValue =
+      name === "title" && value
+        ? value.charAt(0).toUpperCase() + value.slice(1)
+        : value;
+    setFormData((prev) => ({ ...prev, [name]: processedValue }));
 
     if (name === "category") {
       setShowCustomCategory(value === "Other");
@@ -82,6 +110,11 @@ const TransactionForm = ({
       return;
     }
 
+    // Save the category to localStorage for future use (only if it's not a custom category and is in the list)
+    if (!formData.customCategory && CATEGORIES.includes(category)) {
+      localStorage.setItem("lastUsedCategory", category);
+    }
+
     onSubmit({
       ...formData,
       category,
@@ -93,7 +126,7 @@ const TransactionForm = ({
       setFormData({
         title: "",
         amount: "",
-        category: "",
+        category: getLastUsedCategory(),
         customCategory: "",
         type: "expense",
         date: new Date().toISOString().split("T")[0],
@@ -110,14 +143,14 @@ const TransactionForm = ({
       <form className="transaction-form" onSubmit={handleSubmit}>
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="title">Title</label>
+            <label htmlFor="title">Name</label>
             <input
               type="text"
               id="title"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="e.g., Groceries"
+              placeholder="Transaction name"
               required
             />
           </div>
@@ -130,7 +163,8 @@ const TransactionForm = ({
               name="amount"
               value={formData.amount}
               onChange={handleChange}
-              placeholder="0.00"
+              onBlur={handleAmountBlur}
+              placeholder="$0.00"
               step="0.01"
               min="0"
               required
@@ -221,7 +255,7 @@ const TransactionForm = ({
                 setFormData({
                   title: "",
                   amount: "",
-                  category: "",
+                  category: getLastUsedCategory(),
                   customCategory: "",
                   type: "expense",
                   date: new Date().toISOString().split("T")[0],

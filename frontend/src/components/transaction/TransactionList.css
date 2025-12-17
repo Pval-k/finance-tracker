@@ -5,11 +5,85 @@
   padding: 1.5rem;
 }
 
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
 .list-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 1.5rem 0;
+  margin: 0;
+}
+
+.edit-menu-container {
+  position: relative;
+}
+
+.edit-menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-menu-button:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.edit-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-subtle);
+  min-width: 200px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.edit-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.edit-menu-item:hover {
+  background: var(--bg-hover);
+}
+
+.edit-menu-item.delete-item {
+  color: var(--danger);
+}
+
+.edit-menu-item.delete-item:hover {
+  background: var(--bg-hover);
+  color: var(--danger);
 }
 
 .transaction-list {
@@ -30,4 +104,58 @@
   padding: 3rem 1rem;
   color: var(--text-secondary);
   font-size: 0.875rem;
+}
+
+.selection-mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.selection-mode-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.selection-mode-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cancel-selection-button,
+.save-selection-button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-selection-button {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.cancel-selection-button:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.save-selection-button {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.save-selection-button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }

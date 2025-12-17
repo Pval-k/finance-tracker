@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("month");
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Track the selected period date
   const [budget, setBudget] = useState(() => {
     const saved = localStorage.getItem("budget");
     return saved ? parseFloat(saved) : 0;
@@ -34,7 +35,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     filterTransactions();
-  }, [transactions, timeFilter]);
+  }, [transactions, timeFilter, selectedDate]);
 
   const fetchTransactions = async () => {
     try {
@@ -59,29 +60,104 @@ const Dashboard = () => {
   };
 
   const filterTransactions = () => {
-    const now = new Date();
     let startDate;
+    let endDate;
 
     switch (timeFilter) {
       case "day":
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        startDate = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        );
+        endDate = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate() + 1
+        );
         break;
       case "month":
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          1
+        );
+        endDate = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth() + 1,
+          1
+        );
         break;
       case "year":
-        startDate = new Date(now.getFullYear(), 0, 1);
+        startDate = new Date(selectedDate.getFullYear(), 0, 1);
+        endDate = new Date(selectedDate.getFullYear() + 1, 0, 1);
         break;
       default:
         startDate = new Date(0);
+        endDate = new Date();
     }
 
     const filtered = transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date);
-      return transactionDate >= startDate;
+      return transactionDate >= startDate && transactionDate < endDate;
     });
 
     setFilteredTransactions(filtered);
+  };
+
+  const handlePeriodChange = (newDate) => {
+    setSelectedDate(newDate);
+  };
+
+  const handleDeleteAllInPeriod = async () => {
+    // Confirm before deleting
+    const confirmed = window.confirm(
+      "Are you sure you want to delete all transactions for this period? This action cannot be undone."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      // Delete each transaction in the filtered list
+      const deletePromises = filteredTransactions.map((transaction) =>
+        fetch(`${API_URL}/${transaction._id}`, {
+          method: "DELETE",
+          headers: {
+            "x-user-id": "test-user-id",
+          },
+        })
+      );
+
+      await Promise.all(deletePromises);
+      fetchTransactions();
+      alert("All transactions for this period have been deleted.");
+    } catch (error) {
+      console.error("Error deleting transactions:", error);
+      alert("Failed to delete transactions. Please try again.");
+    }
+  };
+
+  const formatTitle = () => {
+    const date = new Date(selectedDate);
+    switch (timeFilter) {
+      case "day":
+        const day = date.getDate();
+        return `${day} ${date.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        })}`;
+      case "month":
+        return date.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
+      case "year":
+        return date.getFullYear().toString();
+      default:
+        return "Dashboard";
+    }
   };
 
   const handleAddTransactionClick = () => {
@@ -114,10 +190,25 @@ const Dashboard = () => {
       <main className="dashboard-main">
         <div className="dashboard-container">
           <div className="dashboard-header">
-            <h1 className="dashboard-title">Dashboard</h1>
+            <div className="dashboard-title-section">
+              <h1 className="dashboard-title">{formatTitle()}</h1>
+            </div>
             <TimeFilters
               timeFilter={timeFilter}
+              selectedDate={selectedDate}
               onFilterChange={setTimeFilter}
+              onPeriodChange={handlePeriodChange}
+              onDeleteAll={handleDeleteAllInPeriod}
+              showToggleOnly={true}
+            />
+          </div>
+          <div className="dashboard-navigation">
+            <TimeFilters
+              timeFilter={timeFilter}
+              selectedDate={selectedDate}
+              onFilterChange={setTimeFilter}
+              onPeriodChange={handlePeriodChange}
+              showNavigationOnly={true}
             />
           </div>
 
@@ -135,6 +226,7 @@ const Dashboard = () => {
                   navigate(`/add-transaction`, { state: { transaction } })
                 }
                 onDelete={handleDelete}
+                onDeleteAll={handleDeleteAllInPeriod}
                 loading={loading}
               />
             </div>

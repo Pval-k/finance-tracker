@@ -2,7 +2,15 @@ import React from "react";
 import { Edit2, Trash2 } from "lucide-react";
 import "./TransactionItem.css";
 
-const TransactionItem = ({ transaction, onEdit, onDelete }) => {
+const TransactionItem = ({
+  transaction,
+  onEdit,
+  onDelete,
+  isSelectionMode = false,
+  isSelected = false,
+  isHidden = false,
+  onToggleSelect,
+}) => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -12,11 +20,25 @@ const TransactionItem = ({ transaction, onEdit, onDelete }) => {
     });
   };
 
+  // Capitalize first letter of transaction title
+  const capitalizedTitle = transaction.title
+    ? transaction.title.charAt(0).toUpperCase() + transaction.title.slice(1)
+    : transaction.title;
+
   return (
-    <div className="transaction-item">
+    <div
+      className={`transaction-item ${isSelected ? "selected" : ""} ${
+        isHidden ? "hidden" : ""
+      } ${isSelectionMode ? "selectable" : ""}`}
+      onClick={() => {
+        if (isSelectionMode && onToggleSelect) {
+          onToggleSelect(transaction._id);
+        }
+      }}
+    >
       <div className="transaction-main">
         <div className="transaction-info">
-          <h3 className="transaction-title">{transaction.title}</h3>
+          <h3 className="transaction-title">{capitalizedTitle}</h3>
           <div className="transaction-meta">
             <span className="transaction-category">{transaction.category}</span>
             <span className="transaction-date">
@@ -35,22 +57,24 @@ const TransactionItem = ({ transaction, onEdit, onDelete }) => {
           </span>
         </div>
       </div>
-      <div className="transaction-actions">
-        <button
-          className="action-button edit-button"
-          onClick={() => onEdit(transaction)}
-          title="Edit"
-        >
-          <Edit2 size={16} />
-        </button>
-        <button
-          className="action-button delete-button"
-          onClick={() => onDelete(transaction._id)}
-          title="Delete"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
+      {!isSelectionMode && (
+        <div className="transaction-actions">
+          <button
+            className="action-button edit-button"
+            onClick={() => onEdit(transaction)}
+            title="Edit"
+          >
+            <Edit2 size={16} />
+          </button>
+          <button
+            className="action-button delete-button"
+            onClick={() => onDelete(transaction._id)}
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

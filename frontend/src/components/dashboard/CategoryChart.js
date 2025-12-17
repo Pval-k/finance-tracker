@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import React, { useMemo, useState, useEffect } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import "./CategoryChart.css";
 
 const COLORS = [
@@ -16,8 +16,32 @@ const COLORS = [
 ];
 
 const CategoryChart = ({ transactions }) => {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Listen for hidden transactions updates
+  useEffect(() => {
+    const handleUpdate = () => {
+      setRefreshKey((prev) => prev + 1);
+    };
+    window.addEventListener("hiddenTransactionsUpdated", handleUpdate);
+    return () => {
+      window.removeEventListener("hiddenTransactionsUpdated", handleUpdate);
+    };
+  }, []);
+
   const categoryData = useMemo(() => {
-    const expenses = transactions.filter((t) => t.type === "expense");
+    // Get hidden transactions from localStorage
+    const getHiddenTransactions = () => {
+      const hidden = localStorage.getItem("hiddenTransactions");
+      return hidden ? new Set(JSON.parse(hidden)) : new Set();
+    };
+
+    const hiddenTransactions = getHiddenTransactions();
+
+    // Filter out hidden transactions
+    const expenses = transactions.filter(
+      (t) => t.type === "expense" && !hiddenTransactions.has(t._id)
+    );
     const categoryTotals = {};
 
     expenses.forEach((transaction) => {
@@ -42,7 +66,7 @@ const CategoryChart = ({ transactions }) => {
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
-  }, [transactions]);
+  }, [transactions, refreshKey]);
 
   if (categoryData.length === 0) {
     return (
@@ -75,14 +99,18 @@ const CategoryChart = ({ transactions }) => {
                 />
               ))}
             </Pie>
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              formatter={(value, entry) => (
-                <span style={{ color: entry.color }}>
-                  {value}: {categoryData.find((d) => d.name === value)?.percentage}%
-                </span>
-              )}
+            <Tooltip
+              formatter={(value, name, props) => {
+                const data = props.payload;
+                return [`${data.name}: ${data.percentage}%`];
+              }}
+              labelFormatter={() => ""}
+              contentStyle={{
+                backgroundColor: "var(--bg-primary)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "8px",
+                color: "var(--text-primary)",
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -107,4 +135,3 @@ const CategoryChart = ({ transactions }) => {
 };
 
 export default CategoryChart;
-

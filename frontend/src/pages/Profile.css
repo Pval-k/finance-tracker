@@ -157,6 +157,36 @@
   color: var(--accent);
 }
 
+.section-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.clear-history-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clear-history-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.clear-history-button:hover {
+  opacity: 0.9;
+  filter: brightness(0.9);
+}
+
 @media (max-width: 768px) {
   .profile-container {
     padding: 0 1rem;
@@ -168,4 +198,3 @@
     gap: 1rem;
   }
 }
-
