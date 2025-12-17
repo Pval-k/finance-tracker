@@ -6,10 +6,10 @@ import clientPromise from "@/lib/mongodb";
 export async function PUT(request, { params }) {
   try {
     // Get the transaction ID from the URL
-    const { id } = params;
+    const { id } = await params;
 
     // Check if the ID is valid
-    if (!ObjectId.isValid(id)) {
+    if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid transaction ID" });
     }
 
@@ -64,10 +64,10 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     // Get the transaction ID from the URL
-    const { id } = params;
+    const { id } = await params;
 
     // Check if the ID is valid
-    if (!ObjectId.isValid(id)) {
+    if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid transaction ID" });
     }
 
