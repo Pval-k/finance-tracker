@@ -77,6 +77,40 @@
   justify-content: center;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.user-info svg {
+  color: var(--text-secondary);
+}
+
+.user-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-button {
+  color: var(--danger);
+}
+
+.logout-button:hover {
+  background: rgba(244, 67, 54, 0.1);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 @media (max-width: 768px) {
   .header-content {
     padding: 0 1rem;
@@ -87,6 +121,14 @@
   }
 
   .header-button span {
+    display: none;
+  }
+
+  .user-info {
+    padding: 0.5rem;
+  }
+
+  .user-name {
     display: none;
   }
 }

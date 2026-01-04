@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { verifyToken } from "@/lib/verifyToken";
 
 // Get all transactions for a user
 export async function GET(request) {
   try {
-    // Get userId from request (will use Firebase token later)
-    const userId = request.headers.get("x-user-id") || "test-user-id";
+    // Verify the Firebase token and get the user ID
+    const { userId, error } = await verifyToken(request);
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
 
     // Connect to MongoDB
     const client = await clientPromise;
@@ -22,24 +30,37 @@ export async function GET(request) {
     return NextResponse.json({ transactions });
   } catch (error) {
     console.error("Error fetching transactions:", error);
-    return NextResponse.json({ error: "Failed to fetch transactions" });
+    return NextResponse.json(
+      { error: "Failed to fetch transactions" },
+      { status: 500 }
+    );
   }
 }
 
 // Create a new transaction
 export async function POST(request) {
   try {
+    // Verify the Firebase token and get the user ID
+    const { userId, error } = await verifyToken(request);
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+
     // Get the data from the request
     const body = await request.json();
     const { title, amount, category, type, date } = body;
 
     // Check if all fields are provided
     if (!title || !amount || !category || !type || !date) {
-      return NextResponse.json({ error: "Missing required fields" });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
-
-    // Get userId from request (will use Firebase token later)
-    const userId = request.headers.get("x-user-id") || "test-user-id";
 
     // Connect to MongoDB
     const client = await clientPromise;
@@ -64,6 +85,9 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Error creating transaction:", error);
-    return NextResponse.json({ error: "Failed to create transaction" });
+    return NextResponse.json(
+      { error: "Failed to create transaction" },
+      { status: 500 }
+    );
   }
 }

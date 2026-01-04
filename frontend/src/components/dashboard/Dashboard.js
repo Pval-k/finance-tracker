@@ -5,9 +5,9 @@ import TransactionList from "../transaction/TransactionList";
 import BudgetCard from "./BudgetCard";
 import CategoryChart from "./CategoryChart";
 import TimeFilters from "./TimeFilters";
+import { authenticatedFetch } from "../../utils/api";
+import { API_URL } from "../../config/api";
 import "./Dashboard.css";
-
-const API_URL = "/api/transactions";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -40,11 +40,7 @@ const Dashboard = () => {
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(API_URL, {
-        headers: {
-          "x-user-id": "test-user-id",
-        },
-      });
+      const response = await authenticatedFetch(API_URL);
       const data = await response.json();
       setTransactions(data.transactions || []);
     } catch (error) {
@@ -122,11 +118,8 @@ const Dashboard = () => {
     try {
       // Delete each transaction in the filtered list
       const deletePromises = filteredTransactions.map((transaction) =>
-        fetch(`${API_URL}/${transaction._id}`, {
+        authenticatedFetch(`${API_URL}/${transaction._id}`, {
           method: "DELETE",
-          headers: {
-            "x-user-id": "test-user-id",
-          },
         })
       );
 
@@ -170,11 +163,8 @@ const Dashboard = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await authenticatedFetch(`${API_URL}/${id}`, {
         method: "DELETE",
-        headers: {
-          "x-user-id": "test-user-id",
-        },
       });
       if (response.ok) {
         fetchTransactions();

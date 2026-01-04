@@ -1,45 +1,127 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft, User, Lock, Trash2 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import {
-  ArrowLeft,
-  User,
-  Lock,
-  Palette,
-  Sun,
-  Moon,
-  Trash2,
-} from "lucide-react";
-import { useTheme } from "../context/ThemeContext";
+  updateProfile,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from "firebase/auth";
+import { authenticatedFetch } from "../utils/api";
+import { API_URL } from "../config/api";
 import "./Profile.css";
-
-const API_URL = "/api/transactions";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
-  const [name, setName] = useState(() => {
-    return localStorage.getItem("userName") || "";
-  });
+  const { currentUser } = useAuth();
+  const [name, setName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
-  const handleSaveName = () => {
-    localStorage.setItem("userName", name);
-    alert("Name saved!");
-  };
+  // Check if user signed in with email/password (not Google)
+  const isEmailPasswordUser =
+    currentUser?.providerData?.some(
+      (provider) => provider.providerId === "password"
+    ) ?? false;
 
-  const handleChangePassword = () => {
-    if (newPassword !== confirmPassword) {
-      alert("Passwords do not match!");
+  // Initialize name from Firebase user or localStorage fallback
+  useEffect(() => {
+    if (currentUser?.displayName) {
+      setName(currentUser.displayName);
+    } else {
+      const savedName = localStorage.getItem("userName");
+      if (savedName) {
+        setName(savedName);
+      }
+    }
+  }, [currentUser]);
+
+  const handleSaveName = async () => {
+    if (!name.trim()) {
+      alert("Please enter a name");
       return;
     }
+
+    try {
+      setSavingName(true);
+      // Update Firebase profile
+      if (currentUser) {
+        await updateProfile(currentUser, {
+          displayName: name.trim(),
+        });
+      }
+      // Also save to localStorage as backup
+      localStorage.setItem("userName", name.trim());
+      alert("Name saved!");
+    } catch (error) {
+      console.error("Error updating name:", error);
+      alert("Failed to save name. Please try again.");
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert("Please fill in all password fields");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert("New passwords do not match!");
+      return;
+    }
+
     if (newPassword.length < 6) {
       alert("Password must be at least 6 characters!");
       return;
     }
-    // TODO: Implement password change with Firebase
-    alert("Password change will be implemented with Firebase Auth");
+
+    if (currentPassword === newPassword) {
+      alert("New password must be different from current password");
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+
+      if (!currentUser?.email) {
+        alert("User email not found");
+        return;
+      }
+
+      // Re-authenticate the user
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        currentPassword
+      );
+      await reauthenticateWithCredential(currentUser, credential);
+
+      // Update the password
+      await updatePassword(currentUser, newPassword);
+
+      // Clear the form
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      alert("Password changed successfully!");
+    } catch (error) {
+      console.error("Error changing password:", error);
+      if (error.code === "auth/wrong-password") {
+        alert("Current password is incorrect");
+      } else if (error.code === "auth/weak-password") {
+        alert("New password is too weak. Please choose a stronger password");
+      } else {
+        alert(`Failed to change password: ${error.message}`);
+      }
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   const handleClearBudgetHistory = async (period) => {
@@ -54,11 +136,7 @@ const Profile = () => {
 
     try {
       // Fetch all transactions
-      const response = await fetch(API_URL, {
-        headers: {
-          "x-user-id": "test-user-id",
-        },
-      });
+      const response = await authenticatedFetch(API_URL);
       const data = await response.json();
       const allTransactions = data.transactions || [];
 
@@ -94,11 +172,8 @@ const Profile = () => {
 
       // Delete all matching transactions
       const deletePromises = transactionsToDelete.map((transaction) =>
-        fetch(`${API_URL}/${transaction._id}`, {
+        authenticatedFetch(`${API_URL}/${transaction._id}`, {
           method: "DELETE",
-          headers: {
-            "x-user-id": "test-user-id",
-          },
         })
       );
 
@@ -139,53 +214,68 @@ const Profile = () => {
                   placeholder="Enter your name"
                 />
               </div>
-              <button className="save-button" onClick={handleSaveName}>
-                Save Name
+              <button
+                className="save-button"
+                onClick={handleSaveName}
+                disabled={savingName}
+              >
+                {savingName ? "Saving..." : "Save Name"}
               </button>
             </div>
           </div>
 
-          <div className="profile-section">
-            <div className="section-header">
-              <Lock size={20} className="section-icon" />
-              <h2 className="section-title">Change Password</h2>
+          {isEmailPasswordUser && (
+            <div className="profile-section">
+              <div className="section-header">
+                <Lock size={20} className="section-icon" />
+                <h2 className="section-title">Change Password</h2>
+              </div>
+              <div className="section-content">
+                <div className="form-group">
+                  <label htmlFor="currentPassword">Current Password</label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    disabled={changingPassword}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="newPassword">New Password</label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    disabled={changingPassword}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="confirmPassword">Confirm New Password</label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    disabled={changingPassword}
+                  />
+                </div>
+                <button
+                  className="save-button"
+                  onClick={handleChangePassword}
+                  disabled={changingPassword}
+                >
+                  {changingPassword
+                    ? "Changing Password..."
+                    : "Change Password"}
+                </button>
+              </div>
             </div>
-            <div className="section-content">
-              <div className="form-group">
-                <label htmlFor="currentPassword">Current Password</label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="newPassword">New Password</label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="confirmPassword">Confirm New Password</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                />
-              </div>
-              <button className="save-button" onClick={handleChangePassword}>
-                Change Password
-              </button>
-            </div>
-          </div>
+          )}
 
           <div className="profile-section">
             <div className="section-header">
@@ -215,31 +305,6 @@ const Profile = () => {
                   onClick={() => handleClearBudgetHistory("years")}
                 >
                   Clear Past Years
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="profile-section">
-            <div className="section-header">
-              <Palette size={20} className="section-icon" />
-              <h2 className="section-title">Appearance</h2>
-            </div>
-            <div className="section-content">
-              <div className="theme-setting">
-                <span className="theme-label">Theme</span>
-                <button className="theme-toggle-button" onClick={toggleTheme}>
-                  {theme === "light" ? (
-                    <>
-                      <Sun size={18} />
-                      <span>Light Mode</span>
-                    </>
-                  ) : (
-                    <>
-                      <Moon size={18} />
-                      <span>Dark Mode</span>
-                    </>
-                  )}
                 </button>
               </div>
             </div>

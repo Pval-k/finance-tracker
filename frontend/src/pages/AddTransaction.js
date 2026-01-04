@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import TransactionForm from "../components/forms/TransactionForm";
+import { authenticatedFetch } from "../utils/api";
+import { API_URL } from "../config/api";
 import "./AddTransaction.css";
-
-const API_URL = "/api/transactions";
 
 const AddTransaction = () => {
   const navigate = useNavigate();
@@ -25,22 +25,17 @@ const AddTransaction = () => {
       let response;
       if (editingTransaction) {
         // Update the existing transaction
-        response = await fetch(`${API_URL}/${editingTransaction._id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": "test-user-id",
-          },
-          body: JSON.stringify(formData),
-        });
+        response = await authenticatedFetch(
+          `${API_URL}/${editingTransaction._id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(formData),
+          }
+        );
       } else {
         // Create a new transaction
-        response = await fetch(API_URL, {
+        response = await authenticatedFetch(API_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": "test-user-id",
-          },
           body: JSON.stringify(formData),
         });
       }

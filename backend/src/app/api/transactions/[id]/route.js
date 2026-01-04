@@ -1,16 +1,30 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
+import { verifyToken } from "@/lib/verifyToken";
 
 // Update a transaction
 export async function PUT(request, { params }) {
   try {
+    // Verify the Firebase token and get the user ID
+    const { userId, error } = await verifyToken(request);
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+
     // Get the transaction ID from the URL
     const { id } = await params;
 
     // Check if the ID is valid
     if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid transaction ID" });
+      return NextResponse.json(
+        { error: "Invalid transaction ID" },
+        { status: 400 }
+      );
     }
 
     // Get the updated data from the request
@@ -19,11 +33,11 @@ export async function PUT(request, { params }) {
 
     // Check if all fields are provided
     if (!title || !amount || !category || !type || !date) {
-      return NextResponse.json({ error: "Missing required fields" });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
-
-    // Get userId from request (will use Firebase token later)
-    const userId = request.headers.get("x-user-id") || "test-user-id";
 
     // Connect to MongoDB
     const client = await clientPromise;
@@ -56,23 +70,36 @@ export async function PUT(request, { params }) {
     });
   } catch (error) {
     console.error("Error updating transaction:", error);
-    return NextResponse.json({ error: "Failed to update transaction" });
+    return NextResponse.json(
+      { error: "Failed to update transaction" },
+      { status: 500 }
+    );
   }
 }
 
 // Delete a transaction
 export async function DELETE(request, { params }) {
   try {
+    // Verify the Firebase token and get the user ID
+    const { userId, error } = await verifyToken(request);
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+
     // Get the transaction ID from the URL
     const { id } = await params;
 
     // Check if the ID is valid
     if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid transaction ID" });
+      return NextResponse.json(
+        { error: "Invalid transaction ID" },
+        { status: 400 }
+      );
     }
-
-    // Get userId from request (will use Firebase token later)
-    const userId = request.headers.get("x-user-id") || "test-user-id";
 
     // Connect to MongoDB
     const client = await clientPromise;
@@ -96,6 +123,9 @@ export async function DELETE(request, { params }) {
     });
   } catch (error) {
     console.error("Error deleting transaction:", error);
-    return NextResponse.json({ error: "Failed to delete transaction" });
+    return NextResponse.json(
+      { error: "Failed to delete transaction" },
+      { status: 500 }
+    );
   }
 }

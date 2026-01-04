@@ -14,3 +14,6 @@ backend/node_modules/
 # Build outputs
 frontend/build/
 backend/.next/
+
+# Firebase service account key (contains sensitive credentials)
+backend/service-account-key.json
