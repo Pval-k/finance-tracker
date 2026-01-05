@@ -115,3 +115,4 @@
 1. Enable Authentication (Email/Password and Google)
 2. Download service account key
 3. Add to backend environment variables
+

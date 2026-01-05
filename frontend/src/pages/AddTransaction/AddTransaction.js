@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import TransactionForm from "../components/forms/TransactionForm";
-import { authenticatedFetch } from "../utils/api";
-import { API_URL } from "../config/api";
+import TransactionForm from "../../components/forms/TransactionForm/TransactionForm";
+import { authenticatedFetch } from "../../utils/api";
+import { API_URL } from "../../config/api";
 import "./AddTransaction.css";
 
 const AddTransaction = () => {
@@ -73,3 +73,4 @@ const AddTransaction = () => {
 };
 
 export default AddTransaction;
+

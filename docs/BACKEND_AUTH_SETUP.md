@@ -31,3 +31,4 @@
    # Terminal 2
    cd frontend && npm start
    ```
+
