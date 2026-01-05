@@ -142,3 +142,21 @@
   border-radius: 4px;
 }
 
+.budget-no-budget {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.no-budget-message {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.no-budget-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+

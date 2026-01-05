@@ -7,10 +7,10 @@ import {
 } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
-import Dashboard from "./components/dashboard/Dashboard";
-import AddTransaction from "./pages/AddTransaction";
-import Profile from "./pages/Profile";
-import Login from "./pages/Login";
+import Dashboard from "./components/dashboard/Dashboard/Dashboard";
+import AddTransaction from "./pages/AddTransaction/AddTransaction";
+import Profile from "./pages/Profile/Profile";
+import Login from "./pages/Login/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 

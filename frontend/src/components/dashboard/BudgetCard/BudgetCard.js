@@ -3,13 +3,13 @@ import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import "./BudgetCard.css";
 
 const BudgetCard = ({ transactions, budget, timeFilter, onBudgetUpdate }) => {
-  const [localBudget, setLocalBudget] = useState(budget);
+  const [localBudget, setLocalBudget] = useState(budget || "");
   const [isEditing, setIsEditing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!isEditing) {
-      setLocalBudget(budget);
+      setLocalBudget(budget || "");
     }
   }, [budget, isEditing]);
 
@@ -39,19 +39,16 @@ const BudgetCard = ({ transactions, budget, timeFilter, onBudgetUpdate }) => {
 
   // Use current budget for calculations (not the editing value)
   const budgetForCalculation =
-    isEditing && localBudget === "" ? budget : localBudget;
+    isEditing && localBudget === "" ? (budget || 0) : (localBudget || 0);
   const remaining = budgetForCalculation - totalExpenses;
   const percentage =
     budgetForCalculation > 0 ? (totalExpenses / budgetForCalculation) * 100 : 0;
+  const hasBudget = budget !== null && budget !== undefined && budget > 0;
 
   const handleSaveBudget = () => {
-    // Use the new budget if entered, otherwise keep the current budget
-    const budgetToSave =
-      localBudget === "" || localBudget === 0 ? budget : localBudget;
+    const budgetToSave = localBudget === "" || localBudget === 0 ? null : parseFloat(localBudget);
     if (onBudgetUpdate) {
       onBudgetUpdate(budgetToSave);
-    } else {
-      localStorage.setItem("budget", budgetToSave.toString());
     }
     setIsEditing(false);
   };
@@ -66,6 +63,8 @@ const BudgetCard = ({ transactions, budget, timeFilter, onBudgetUpdate }) => {
             <span className="budget-period">
               {timeFilter === "day"
                 ? "Today"
+                : timeFilter === "week"
+                ? "This Week"
                 : timeFilter === "month"
                 ? "This Month"
                 : "This Year"}
@@ -76,11 +75,11 @@ const BudgetCard = ({ transactions, budget, timeFilter, onBudgetUpdate }) => {
           <button
             className="edit-budget-button"
             onClick={() => {
-              setLocalBudget("");
+              setLocalBudget(budget || "");
               setIsEditing(true);
             }}
           >
-            Edit
+            {hasBudget ? "Edit" : "Set Budget"}
           </button>
         ) : (
           <button className="save-budget-button" onClick={handleSaveBudget}>
@@ -98,11 +97,11 @@ const BudgetCard = ({ transactions, budget, timeFilter, onBudgetUpdate }) => {
               const value = e.target.value;
               setLocalBudget(value === "" ? "" : parseFloat(value) || 0);
             }}
-            placeholder={`$${budget.toFixed(2)}`}
+            placeholder={hasBudget ? `$${budget.toFixed(2)}` : "Enter budget amount"}
             className="budget-input"
           />
         </div>
-      ) : (
+      ) : hasBudget ? (
         <>
           <div className="budget-amount">${budget.toFixed(2)}</div>
           <div className="budget-stats">
@@ -139,9 +138,15 @@ const BudgetCard = ({ transactions, budget, timeFilter, onBudgetUpdate }) => {
             />
           </div>
         </>
+      ) : (
+        <div className="budget-no-budget">
+          <p className="no-budget-message">No budget set for this period</p>
+          <p className="no-budget-subtitle">Set a budget to track your spending</p>
+        </div>
       )}
     </div>
   );
 };
 
 export default BudgetCard;
+
