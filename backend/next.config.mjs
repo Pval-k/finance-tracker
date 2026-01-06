@@ -2,7 +2,10 @@
 const nextConfig = {
   /* config options here */
   serverExternalPackages: ["firebase-admin"],
-  webpack: (config, { isServer }) => {
+  experimental: {
+    serverComponentsExternalPackages: ["firebase-admin"],
+  },
+  webpack: (config, { isServer, webpack }) => {
     if (isServer) {
       // Externalize firebase-admin and all its submodules
       const originalExternals = config.externals;
@@ -16,7 +19,8 @@ const nextConfig = {
           if (
             request &&
             typeof request === "string" &&
-            request.startsWith("firebase-admin")
+            (request === "firebase-admin" ||
+              request.startsWith("firebase-admin/"))
           ) {
             return callback(null, `commonjs ${request}`);
           }
