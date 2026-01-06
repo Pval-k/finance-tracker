@@ -1,4 +1,4 @@
-import { adminAuth } from "./firebase-admin";
+import { getAdminAuth } from "./firebase-admin";
 
 /**
  * Verifies a Firebase ID token and returns the user ID
@@ -34,6 +34,7 @@ export async function verifyToken(request) {
     }
 
     // Verify the token
+    const adminAuth = await getAdminAuth();
     const decodedToken = await adminAuth.verifyIdToken(token);
 
     // Return the user ID
@@ -74,4 +75,3 @@ export async function verifyToken(request) {
     };
   }
 }
-
