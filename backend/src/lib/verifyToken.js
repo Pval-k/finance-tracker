@@ -20,16 +20,20 @@ async function getAdminAuth() {
       const { createRequire } = await import(mod);
       const requireFn = createRequire(import.meta.url);
 
-      // Dynamically require firebase-admin using string concatenation
+      // Use eval to completely hide require calls from static analysis
+      // This prevents Next.js from analyzing the module resolution
       const firebaseAdminApp = "firebase-admin" + "/app";
       const firebaseAdminAuth = "firebase-admin" + "/auth";
-      const fsModule = "fs";
-      const pathModule = "path";
+      const fsModule = "f" + "s";
+      const pathModule = "p" + "a" + "t" + "h";
 
-      const { initializeApp, getApps, cert } = requireFn(firebaseAdminApp);
-      const { getAuth } = requireFn(firebaseAdminAuth);
-      const { readFileSync } = requireFn(fsModule);
-      const { join } = requireFn(pathModule);
+      // Use eval to hide require calls
+      const { initializeApp, getApps, cert } = eval(
+        `requireFn("${firebaseAdminApp}")`
+      );
+      const { getAuth } = eval(`requireFn("${firebaseAdminAuth}")`);
+      const { readFileSync } = eval(`requireFn("${fsModule}")`);
+      const { join } = eval(`requireFn("${pathModule}")`);
 
       console.log("[Firebase Admin] Modules loaded");
 
