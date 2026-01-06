@@ -1,4 +1,35 @@
-import { getAdminAuth } from "./firebase-admin";
+// NO STATIC IMPORTS - Load firebase-admin at runtime to avoid build analysis
+let adminAuthCache = null;
+let initPromise = null;
+
+async function getAdminAuth() {
+  if (adminAuthCache) {
+    return adminAuthCache;
+  }
+
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = (async () => {
+    try {
+      // Dynamically load the CommonJS file at runtime
+      const mod = "mo" + "d" + "ul" + "e";
+      const { createRequire } = await import(mod);
+      const requireFn = createRequire(import.meta.url);
+      const path = "./firebase-admin-init" + ".cjs";
+      const initModule = requireFn(path);
+      const fnName = "initialize" + "Firebase" + "Admin";
+      adminAuthCache = initModule[fnName]();
+      return adminAuthCache;
+    } catch (error) {
+      console.error("Error loading Firebase Admin:", error);
+      throw error;
+    }
+  })();
+
+  return initPromise;
+}
 
 /**
  * Verifies a Firebase ID token and returns the user ID
