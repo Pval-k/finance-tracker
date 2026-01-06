@@ -5,6 +5,8 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["firebase-admin"],
   },
+  // Disable Turbopack to use webpack (which handles externals better)
+  turbopack: undefined,
   webpack: (config, { isServer, webpack }) => {
     if (isServer) {
       // Externalize firebase-admin and all its submodules

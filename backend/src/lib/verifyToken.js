@@ -1,4 +1,4 @@
-// NO STATIC IMPORTS - Load firebase-admin at runtime to avoid build analysis
+// NO STATIC IMPORTS - Initialize firebase-admin inline to avoid build analysis
 let adminAuthCache = null;
 let initPromise = null;
 
@@ -14,19 +14,66 @@ async function getAdminAuth() {
   initPromise = (async () => {
     try {
       console.log("[Firebase Admin] Starting initialization...");
-      // Dynamically load the CommonJS file at runtime
+
+      // Use dynamic import with string manipulation to prevent static analysis
       const mod = "mo" + "d" + "ul" + "e";
-      console.log("[Firebase Admin] Loading module:", mod);
       const { createRequire } = await import(mod);
-      console.log("[Firebase Admin] createRequire loaded");
       const requireFn = createRequire(import.meta.url);
-      const path = "./firebase-admin-init" + ".cjs";
-      console.log("[Firebase Admin] Loading CommonJS file:", path);
-      const initModule = requireFn(path);
-      console.log("[Firebase Admin] CommonJS file loaded");
-      const fnName = "initialize" + "Firebase" + "Admin";
-      console.log("[Firebase Admin] Calling initialization function");
-      adminAuthCache = initModule[fnName]();
+
+      // Dynamically require firebase-admin using string concatenation
+      const firebaseAdminApp = "firebase-admin" + "/app";
+      const firebaseAdminAuth = "firebase-admin" + "/auth";
+      const fsModule = "fs";
+      const pathModule = "path";
+
+      const { initializeApp, getApps, cert } = requireFn(firebaseAdminApp);
+      const { getAuth } = requireFn(firebaseAdminAuth);
+      const { readFileSync } = requireFn(fsModule);
+      const { join } = requireFn(pathModule);
+
+      console.log("[Firebase Admin] Modules loaded");
+
+      // Initialize Firebase Admin
+      if (getApps().length === 0) {
+        let serviceAccount = null;
+
+        // Try to load from environment variable first
+        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (serviceAccountKey) {
+          try {
+            serviceAccount = JSON.parse(serviceAccountKey);
+          } catch (parseError) {
+            console.error(
+              "Error parsing FIREBASE_SERVICE_ACCOUNT_KEY:",
+              parseError
+            );
+          }
+        }
+
+        // If not found in env var, try to load from local file
+        if (!serviceAccount) {
+          try {
+            const serviceAccountPath = join(
+              process.cwd(),
+              "service-account-key.json"
+            );
+            const serviceAccountFile = readFileSync(serviceAccountPath, "utf8");
+            serviceAccount = JSON.parse(serviceAccountFile);
+          } catch (fileError) {
+            // File doesn't exist - that's okay
+          }
+        }
+
+        if (serviceAccount) {
+          initializeApp({
+            credential: cert(serviceAccount),
+          });
+        } else {
+          initializeApp();
+        }
+      }
+
+      adminAuthCache = getAuth(getApps()[0]);
       console.log("[Firebase Admin] Initialization complete");
       return adminAuthCache;
     } catch (error) {
