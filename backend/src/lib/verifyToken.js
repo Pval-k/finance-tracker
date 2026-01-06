@@ -13,17 +13,25 @@ async function getAdminAuth() {
 
   initPromise = (async () => {
     try {
+      console.log("[Firebase Admin] Starting initialization...");
       // Dynamically load the CommonJS file at runtime
       const mod = "mo" + "d" + "ul" + "e";
+      console.log("[Firebase Admin] Loading module:", mod);
       const { createRequire } = await import(mod);
+      console.log("[Firebase Admin] createRequire loaded");
       const requireFn = createRequire(import.meta.url);
       const path = "./firebase-admin-init" + ".cjs";
+      console.log("[Firebase Admin] Loading CommonJS file:", path);
       const initModule = requireFn(path);
+      console.log("[Firebase Admin] CommonJS file loaded");
       const fnName = "initialize" + "Firebase" + "Admin";
+      console.log("[Firebase Admin] Calling initialization function");
       adminAuthCache = initModule[fnName]();
+      console.log("[Firebase Admin] Initialization complete");
       return adminAuthCache;
     } catch (error) {
-      console.error("Error loading Firebase Admin:", error);
+      console.error("[Firebase Admin] Error loading Firebase Admin:", error);
+      console.error("[Firebase Admin] Error stack:", error.stack);
       throw error;
     }
   })();
