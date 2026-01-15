@@ -1,13 +1,15 @@
-import { NextResponse } from "next/server";
-import { verifyToken } from "@/lib/verifyToken";
-import clientPromise from "@/lib/mongodb";
-import OpenAI from "openai";
+const express = require("express");
+const router = express.Router();
+const clientPromise = require("../lib/mongodb");
+const OpenAI = require("openai");
+const functions = require("firebase-functions");
 
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  : null;
+const openai =
+  functions.config().openai?.key || process.env.OPENAI_API_KEY
+    ? new OpenAI({
+        apiKey: functions.config().openai?.key || process.env.OPENAI_API_KEY,
+      })
+    : null;
 
 // Categories considered "unnecessary spending"
 const DISCRETIONARY_CATEGORIES = [
@@ -19,21 +21,13 @@ const DISCRETIONARY_CATEGORIES = [
 
 const ESSENTIAL_CATEGORIES = ["Rent", "Bills", "Utilities", "Salary"];
 
-export async function POST(request) {
+router.post("/", async (req, res) => {
   try {
-    const { userId, error } = await verifyToken(request);
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.status }
-      );
-    }
-
-    const body = await request.json();
-    const { budget, timeFilter, selectedDate } = body;
+    const userId = req.userId;
+    const { budget, timeFilter, selectedDate } = req.body;
 
     if (!budget || budget === 0) {
-      return NextResponse.json({
+      return res.json({
         insights: [],
         fallback: true,
         message: "Set a budget to get insights!",
@@ -77,7 +71,7 @@ export async function POST(request) {
       .toArray();
 
     if (currentTransactions.length === 0) {
-      return NextResponse.json({
+      return res.json({
         insights: [],
         fallback: true,
         message: "Add expenses to get insights!",
@@ -131,7 +125,7 @@ export async function POST(request) {
 
     try {
       // Check if API key exists and OpenAI is initialized
-      if (!openai || !process.env.OPENAI_API_KEY) {
+      if (!openai || (!functions.config().openai?.key && !process.env.OPENAI_API_KEY)) {
         throw new Error("OpenAI API key not configured");
       }
 
@@ -185,7 +179,7 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json({
+    return res.json({
       insights: aiInsights,
       stats: {
         currentTotal,
@@ -200,12 +194,9 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Error generating insights:", error);
-    return NextResponse.json(
-      { error: "Failed to generate insights" },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: "Failed to generate insights" });
   }
-}
+});
 
 function buildAIPrompt(
   budget,
@@ -463,3 +454,6 @@ function getPreviousPeriodEnd(date, filter) {
       return new Date();
   }
 }
+
+module.exports = router;
+

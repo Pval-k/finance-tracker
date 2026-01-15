@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Sparkles, RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
 import { authenticatedFetch } from "../../../utils/api";
+import { getApiEndpoint } from "../../../config/api";
 import "./BudgetInsights.css";
 
 const BudgetInsights = ({ transactions, timeFilter, selectedDate, budget }) => {
@@ -27,9 +28,8 @@ const BudgetInsights = ({ transactions, timeFilter, selectedDate, budget }) => {
       setLoading(true);
       setError(null);
 
-      // Get base API URL (same logic as api.js but for any endpoint)
-      const baseUrl = process.env.REACT_APP_API_URL || "";
-      const apiUrl = `${baseUrl}/api/budget-insights`;
+      // Get API URL for budget-insights endpoint
+      const apiUrl = getApiEndpoint("budget-insights");
 
       const response = await authenticatedFetch(apiUrl, {
         method: "POST",
