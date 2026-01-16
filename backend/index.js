@@ -18,6 +18,16 @@ admin.initializeApp();
 
 const app = express();
 
+// Handle OPTIONS preflight requests FIRST, before any other middleware
+// This must be at the very top to catch CORS preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Max-Age', '3600');
+  res.sendStatus(204);
+});
+
 // Log all requests for debugging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, {
@@ -32,9 +42,6 @@ app.use((req, res, next) => {
 app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.json());
-
-// Explicitly handle OPTIONS for all routes before auth
-app.options('*', cors({ origin: true, credentials: true }));
 
 // Import route handlers
 const transactionsRoutes = require("./routes/transactions");
