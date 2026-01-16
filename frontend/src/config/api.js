@@ -26,9 +26,12 @@ export const API_BASE_URL = getApiBaseUrl();
 const getApiUrl = () => {
   const baseUrl = API_BASE_URL;
   if (baseUrl) {
-    // Base URL is the function path (e.g., .../us-central1/api)
-    // Express routes are defined as /api/transactions, so we need /api/transactions
-    // Final URL: .../us-central1/api/api/transactions
+    // Check if base URL already ends with /api (Firebase Cloud Function)
+    // If so, just append /transactions, otherwise append /api/transactions
+    if (baseUrl.endsWith('/api')) {
+      return `${baseUrl}/transactions`;
+    }
+    // For emulator or other cases, append /api/transactions
     return `${baseUrl}/api/transactions`;
   }
   // Development: relative path (proxy handles it)
@@ -41,7 +44,12 @@ export const API_URL = getApiUrl();
 export const getApiEndpoint = (endpoint) => {
   const baseUrl = API_BASE_URL;
   if (baseUrl) {
-    // Base URL is the function path, Express routes are /api/{endpoint}
+    // Check if base URL already ends with /api (Firebase Cloud Function)
+    // If so, just append endpoint, otherwise append /api/endpoint
+    if (baseUrl.endsWith('/api')) {
+      return `${baseUrl}/${endpoint}`;
+    }
+    // For emulator or other cases, append /api/endpoint
     return `${baseUrl}/api/${endpoint}`;
   }
   return `/api/${endpoint}`;
