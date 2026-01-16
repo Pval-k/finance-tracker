@@ -46,7 +46,6 @@ const BudgetInsights = ({ transactions, timeFilter, selectedDate, budget }) => {
       const data = await response.json();
       setInsights(data.insights || []);
       setStats(data.stats);
-      setUsingAI(data.usingAI !== false); // kept for potential future use
     } catch (err) {
       console.error("Error fetching insights:", err);
       setError("Failed to load insights");
