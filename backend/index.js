@@ -18,7 +18,10 @@ if (process.env.NODE_ENV !== "production") {
 // In local development, it uses default credentials or service account
 try {
   admin.initializeApp();
-  console.log("Firebase Admin initialized for project:", admin.app().options.projectId || "default");
+  console.log(
+    "Firebase Admin initialized for project:",
+    admin.app().options.projectId || "default"
+  );
 } catch (error) {
   // App might already be initialized (e.g., in Cloud Functions environment)
   if (error.code !== "app/already-initialized") {
@@ -103,7 +106,7 @@ const verifyToken = async (req, res, next) => {
         tokenPrefix: token ? token.substring(0, 30) + "..." : "null",
         firebaseProject: admin.app().options.projectId || "unknown",
       });
-      
+
       if (error.code === "auth/id-token-expired") {
         return res.status(401).json({
           error: "Unauthorized: Token expired",
