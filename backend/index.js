@@ -17,16 +17,23 @@ if (process.env.NODE_ENV !== "production") {
 admin.initializeApp();
 
 const app = express();
-// CORS configuration - allow all origins for Firebase Hosting
-// The cors middleware automatically handles OPTIONS preflight requests
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+
+// CORS configuration - must be before other middleware
+// Allow all origins for Firebase Hosting (production) and localhost (development)
+const corsOptions = {
+  origin: true, // Allow all origins
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
+// Explicitly handle OPTIONS requests for all routes (CORS preflight)
+app.options("*", cors(corsOptions));
+
 app.use(express.json());
 
 // Import route handlers
