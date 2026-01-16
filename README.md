@@ -2,6 +2,10 @@
 
 A full-stack personal finance management application with AI-powered budget insights, real-time transaction tracking, and comprehensive data visualization. Built with React and Firebase Cloud Functions, with frontend deployed on Firebase Hosting.
 
+**Live Demo:** [https://finance-tracker-526d4.web.app](https://finance-tracker-526d4.web.app)
+
+> **Note:** The frontend is deployed and accessible via the link above. The backend API is configured for Firebase Cloud Functions but requires a Blaze plan for deployment. For full functionality, use the local development setup with Firebase emulators.
+
 ## Architecture Overview
 
 ### Frontend (React)
