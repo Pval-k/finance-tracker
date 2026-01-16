@@ -1,10 +1,4 @@
 {
-  "functions": [
-    {
-      "source": "backend",
-      "codebase": "default"
-    }
-  ],
   "emulators": {
     "functions": {
       "port": 5001
@@ -15,11 +9,7 @@
   },
   "hosting": {
     "public": "frontend/build",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "**",
@@ -48,4 +38,3 @@
     ]
   }
 }
-

@@ -1,8 +1,6 @@
 # Finance Tracker
 
-A production-ready full-stack personal finance management application with AI-powered budget insights, real-time transaction tracking, and comprehensive data visualization. Built with React and Firebase Cloud Functions, deployed entirely on Firebase infrastructure.
-
-**Live Demo:** [finance-tracker-526d4.web.app](https://finance-tracker-526d4.web.app)
+A full-stack personal finance management application with AI-powered budget insights, real-time transaction tracking, and comprehensive data visualization. Built with React and Firebase Cloud Functions, with frontend deployed on Firebase Hosting.
 
 ## Architecture Overview
 
@@ -26,11 +24,11 @@ A production-ready full-stack personal finance management application with AI-po
 
 ### Infrastructure
 
-- **Frontend Deployment:** Firebase Hosting (CDN, HTTPS, global distribution)
-- **Backend Deployment:** Firebase Cloud Functions (serverless, auto-scaling)
+- **Frontend Deployment:** Firebase Hosting (CDN, HTTPS, global distribution) - Deployed
+- **Backend Deployment:** Firebase Cloud Functions (serverless, auto-scaling) - Configured, requires Blaze plan for deployment
 - **Authentication:** Firebase Authentication (Email/Password, Google OAuth)
 - **Database:** MongoDB Atlas (cloud-hosted, user-isolated data)
-- **CI/CD:** GitHub Actions (automated testing and deployment)
+- **CI/CD:** GitHub Actions (automated testing and deployment for frontend)
 
 ## Key Features
 
@@ -166,7 +164,7 @@ The system filters transactions based on selected time period and date:
 ### DevOps & Infrastructure
 
 - **Firebase Hosting** - Static site hosting with CDN
-- **Firebase Cloud Functions** - Serverless function hosting
+- **Firebase Cloud Functions** - Serverless function hosting (configured, requires Blaze plan for deployment)
 - **MongoDB Atlas** - Managed cloud database
 - **GitHub Actions** - CI/CD pipeline for automated deployments
 - **Firebase CLI** - Deployment and project management
@@ -235,10 +233,11 @@ Transactions are stored in MongoDB with this structure:
 
 ### Serverless Architecture
 
-- Entire backend runs on Firebase Cloud Functions
-- No server management required
-- Automatic scaling based on traffic
-- Pay-per-use pricing model
+- Backend designed to run on Firebase Cloud Functions (configured and tested locally)
+- No server management required when deployed
+- Automatic scaling based on traffic (when deployed)
+- Pay-per-use pricing model (requires Firebase Blaze plan)
+- Currently runs locally via Firebase emulators for development
 
 ### Security
 
@@ -264,7 +263,7 @@ Transactions are stored in MongoDB with this structure:
 ### CI/CD Pipeline
 
 - Automated testing on pull requests
-- Automatic deployment to Firebase on push to main branch
+- Automatic deployment to Firebase Hosting on push to main branch
 - Environment variable management via GitHub Secrets
 - Build optimization and dependency caching
 
