@@ -1503,6 +1503,57 @@ function getMongoClient() {
 
 ---
 
+### Problem 7: Firebase Cloud Functions CORS and Public Access (Production Deployment)
+
+**The Problem:**
+
+- Backend deployed successfully to Firebase Cloud Functions
+- Frontend deployed to Firebase Hosting
+- All API requests from frontend were failing with CORS errors (status 0)
+- OPTIONS preflight requests were returning 403 Forbidden
+- Even simple GET requests to `/health` endpoint returned 403
+- Error: "Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present"
+
+**The Root Cause:**
+
+- Firebase Cloud Functions require explicit IAM permissions to be publicly accessible
+- By default, Cloud Functions are private and require authentication at the infrastructure level
+- The 403 errors were coming from Firebase's proxy layer ("Google Frontend"), not from Express
+- Requests were being blocked before they could reach the Express application
+- Even with correct CORS configuration in Express, if the function isn't publicly accessible, all requests (including OPTIONS) are denied
+
+**The Solution:**
+
+1. **Made the function publicly accessible:**
+   - Went to Google Cloud Console → Cloud Functions → `api` function → Permissions tab
+   - Added `allUsers` principal with `Cloud Functions Invoker` role
+   - This allows unauthenticated HTTP requests to reach the function
+
+2. **Configured CORS in Express (already done, but now it works):**
+   - Added OPTIONS handler at the very top of Express app (before all middleware)
+   - Configured CORS middleware to allow all origins: `cors({ origin: true, credentials: true })`
+   - Made `verifyToken` middleware skip OPTIONS requests (they don't have Authorization headers)
+   - Explicit OPTIONS handler returns proper CORS headers: `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`
+
+**What this does:**
+
+- Allows public HTTP access to the Cloud Function (required for frontend to call it)
+- Properly handles CORS preflight (OPTIONS) requests before authentication middleware
+- Returns correct CORS headers so browsers allow cross-origin requests
+- Security is maintained: actual API endpoints still require Firebase JWT tokens for authentication
+
+**Why it matters:**
+
+- Shows understanding of Firebase Cloud Functions IAM permissions
+- Demonstrates knowledge of CORS preflight request handling
+- Understanding of multi-layer security (infrastructure-level vs application-level)
+- Important distinction: making function "public" doesn't mean endpoints are unsecured - authentication still happens in application code
+
+**Interview answer:**
+"When I deployed both frontend and backend, all API requests were failing with CORS errors. The OPTIONS preflight requests were returning 403 Forbidden before even reaching Express. I discovered that Firebase Cloud Functions require explicit IAM permissions to be publicly accessible - by default they're private. The 403 errors were coming from Firebase's infrastructure layer, not from my application code. Even though I had proper CORS configuration in Express, requests were being blocked at the Cloud Functions level before they could reach Express. I fixed this by adding `allUsers` with `Cloud Functions Invoker` role in Google Cloud Console's IAM permissions for the function. I also ensured OPTIONS requests bypass authentication middleware and return proper CORS headers. This taught me that serverless functions have multiple security layers - infrastructure-level permissions (who can invoke the function) and application-level permissions (authentication in the code). Making the function publicly accessible doesn't compromise security because the actual endpoints still require Firebase JWT tokens."
+
+---
+
 ### Summary: How These Bugs Were Fixed
 
 **The Debugging Process:**
