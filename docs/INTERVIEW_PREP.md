@@ -1595,6 +1595,63 @@ function getMongoClient() {
 
 ---
 
+### Problem 8: 404 Not Found After Backend Deployment (Route Path Mismatch)
+
+**The Problem:**
+
+- Backend deployed successfully to Firebase Cloud Functions
+- Health check endpoint (`/health`) worked correctly
+- But all API endpoints (`/api/transactions`, `/api/budget-insights`) returned `404 Not Found`
+- Requests were reaching Express (confirmed by `x-powered-by: Express` header)
+- But Express was not matching the routes, even though they were defined correctly
+
+**The Root Cause:**
+
+- Firebase Cloud Function was named `api`
+- Full Cloud Function URL: `https://us-central1-finance-tracker-526d4.cloudfunctions.net/api`
+- Express routes were defined with `/api` prefix: `app.use("/api/transactions", ...)`
+- This caused the full URL path to become: `.../api/api/transactions` (double `/api`)
+- Firebase strips the function name from the path when passing to Express
+- So when frontend requested `.../api/transactions`, Firebase passed `/transactions` to Express
+- But Express was looking for `/api/transactions`, which didn't exist, causing 404
+
+**How I discovered it:**
+
+- Checked Firebase Functions logs: saw `GET /transactions` requests (not `/api/transactions`)
+- Tested health endpoint at `/health` - it worked (confirmed Express routing worked in general)
+- Added test route `/test` - it worked (confirmed new routes could be added)
+- Realized the path mismatch: Firebase passes `/transactions` to Express, but Express expected `/api/transactions`
+
+**The Solution:**
+
+1. **Changed Express route definitions:**
+   - Changed `app.use("/api/transactions", ...)` → `app.use("/transactions", ...)`
+   - Changed `app.use("/api/budget-insights", ...)` → `app.use("/budget-insights", ...)`
+   - Removed the `/api` prefix from all Express routes
+
+2. **Why this works:**
+   - Cloud Function name is `api` → full URL includes `/api`
+   - Express routes at `/transactions` → Firebase passes `/transactions` to Express
+   - Full path becomes: `.../api` (function) + `/transactions` (route) = `.../api/transactions` ✓
+
+3. **Frontend URL construction was already correct:**
+   - Frontend checks if `API_BASE_URL` ends with `/api`
+   - If yes, appends `/transactions` → results in `.../api/transactions`
+   - No frontend changes needed
+
+**What this teaches:**
+
+- Understanding how Firebase Cloud Functions routing works
+- Function name becomes part of the URL path
+- Express routes are relative to the function endpoint, not the full URL
+- Importance of testing endpoints after deployment to catch path mismatches
+- Reading deployment logs to understand actual request paths vs expected paths
+
+**Interview answer:**
+"After deploying the backend, I got 404 errors on all API endpoints, even though the health check worked. I checked the Firebase Functions logs and saw requests were arriving as `GET /transactions`, but my Express routes were defined as `/api/transactions`. I realized that when you name a Cloud Function `api`, Firebase strips the function name from the path before passing it to Express. So `.../api/transactions` becomes `/transactions` in Express, but my routes expected `/api/transactions`. I fixed this by removing the `/api` prefix from all Express route definitions, since the function name already provides it. The full URL path is function name (`api`) + Express route (`/transactions`) = `/api/transactions`. This taught me to understand how serverless platforms handle URL routing differently from traditional servers."
+
+---
+
 ### Summary: How These Bugs Were Fixed
 
 **The Debugging Process:**
