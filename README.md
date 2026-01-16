@@ -4,7 +4,7 @@ A full-stack personal finance management application with AI-powered budget insi
 
 **Live Demo:** [https://finance-tracker-526d4.web.app](https://finance-tracker-526d4.web.app)
 
-> **Note:** The frontend is deployed and accessible via the link above. The backend API is configured for Firebase Cloud Functions but requires a Blaze plan for deployment. For full functionality, use the local development setup with Firebase emulators.
+> **Note:** Both frontend and backend are now fully deployed on Firebase. The frontend is hosted on Firebase Hosting, and the backend API runs on Firebase Cloud Functions with automatic scaling.
 
 ## Architecture Overview
 
