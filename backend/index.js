@@ -35,6 +35,8 @@ app.options("*", (req, res) => {
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, {
     origin: req.headers.origin,
+    hasAuthHeader: !!req.headers.authorization,
+    authHeaderPrefix: req.headers.authorization?.substring(0, 20) || "none",
     "access-control-request-method":
       req.headers["access-control-request-method"],
   });
@@ -55,10 +57,10 @@ const budgetInsightsRoutes = require("./routes/budget-insights");
 // Skip token verification for OPTIONS requests (CORS preflight)
 const verifyToken = async (req, res, next) => {
   // Allow OPTIONS requests through without authentication (CORS preflight)
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return next();
   }
-  
+
   try {
     const authHeader = req.headers.authorization;
 
