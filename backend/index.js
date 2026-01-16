@@ -20,11 +20,14 @@ const app = express();
 
 // Handle OPTIONS preflight requests FIRST, before any other middleware
 // This must be at the very top to catch CORS preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Max-Age', '3600');
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With"
+  );
+  res.header("Access-Control-Max-Age", "3600");
   res.sendStatus(204);
 });
 
@@ -32,7 +35,8 @@ app.options('*', (req, res) => {
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, {
     origin: req.headers.origin,
-    'access-control-request-method': req.headers['access-control-request-method']
+    "access-control-request-method":
+      req.headers["access-control-request-method"],
   });
   next();
 });
@@ -48,7 +52,13 @@ const transactionsRoutes = require("./routes/transactions");
 const budgetInsightsRoutes = require("./routes/budget-insights");
 
 // Middleware to verify Firebase token
+// Skip token verification for OPTIONS requests (CORS preflight)
 const verifyToken = async (req, res, next) => {
+  // Allow OPTIONS requests through without authentication (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+  
   try {
     const authHeader = req.headers.authorization;
 
