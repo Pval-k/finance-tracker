@@ -18,16 +18,16 @@ admin.initializeApp();
 
 const app = express();
 // CORS configuration - allow all origins for Firebase Hosting
-app.use(cors({ 
-  origin: true, 
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// The cors middleware automatically handles OPTIONS preflight requests
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
-
-// Explicitly handle OPTIONS requests for CORS preflight
-app.options('*', cors());
 
 // Import route handlers
 const transactionsRoutes = require("./routes/transactions");
