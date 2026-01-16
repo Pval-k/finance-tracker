@@ -1442,6 +1442,67 @@ function getMongoClient() {
 
 ---
 
+### Problem 6: MongoDB Atlas Network Access (Production Deployment)
+
+**The Problem:**
+
+- Backend deployed successfully to Firebase Cloud Functions
+- Function was active and receiving requests
+- But transactions were failing with "Failed to save transaction" error
+- Firebase Functions logs showed: `MongoServerSelectionError: SSL routines:ssl3_read_bytes:tlsv1 alert internal error`
+- The backend couldn't connect to MongoDB Atlas from the cloud function
+
+**The Root Cause:**
+
+- MongoDB Atlas has Network Access settings (security feature)
+- By default, it blocks all connections unless IP addresses are whitelisted
+- Firebase Cloud Functions run on Google's cloud infrastructure with dynamic IP addresses
+- These IPs weren't allowed in MongoDB Atlas Network Access settings
+- The SSL/TLS connection was being rejected at the network level, not the application level
+
+**The Solution:**
+
+1. **Identified the issue from Firebase Functions logs:**
+   ```bash
+   firebase functions:log
+   # Saw: MongoServerSelectionError - SSL connection failed
+   ```
+
+2. **Checked MongoDB Atlas Network Access:**
+   - Went to MongoDB Atlas Dashboard
+   - Clicked "Database & Network Access" → "Network Access" tab
+   - Saw that no IP addresses were whitelisted (or only local IPs)
+
+3. **Added network access:**
+   - Clicked "Add IP Address"
+   - Selected "Allow Access from Anywhere" (adds `0.0.0.0/0`)
+   - This allows all IP addresses to connect (necessary for cloud functions with dynamic IPs)
+   - Confirmed the change
+
+4. **Verified the fix:**
+   - Waited for MongoDB Atlas to apply the network changes (usually immediate)
+   - Tested transaction creation on live site
+   - Checked Firebase Functions logs - no more MongoDB connection errors
+
+**What this does:**
+
+- Opens MongoDB Atlas to accept connections from any IP address
+- Allows Firebase Cloud Functions (which have dynamic IPs) to connect
+- Maintains security through authentication (username/password in connection string)
+- Alternative: Could whitelist specific Google Cloud IP ranges, but `0.0.0.0/0` is simpler for serverless functions
+
+**Why it matters:**
+
+- Shows understanding of cloud infrastructure and network security
+- Demonstrates ability to debug production deployment issues
+- Understanding of how serverless functions interact with external services
+- Important for security: Knowing when to use IP whitelisting vs authentication
+
+**Interview answer:**
+"When I deployed the backend to Firebase Cloud Functions, transactions started failing. I checked the Firebase Functions logs and found a MongoDB connection error - SSL/TLS connection was being rejected. The backend was deployed correctly and receiving requests, but MongoDB Atlas was blocking the connection at the network level. MongoDB Atlas has Network Access settings that whitelist IP addresses by default. Firebase Cloud Functions run on Google's infrastructure with dynamic IP addresses that weren't whitelisted. I fixed this by adding `0.0.0.0/0` to MongoDB Atlas Network Access, allowing connections from any IP (necessary for serverless functions). Security is maintained through the MongoDB connection string authentication, not just IP whitelisting. This taught me that when deploying serverless functions, you need to consider network-level access restrictions for external services."
+
+---
+
 ### Summary: How These Bugs Were Fixed
 
 **The Debugging Process:**

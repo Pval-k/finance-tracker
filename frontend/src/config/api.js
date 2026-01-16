@@ -28,7 +28,7 @@ const getApiUrl = () => {
   if (baseUrl) {
     // Check if base URL already ends with /api (Firebase Cloud Function)
     // If so, just append /transactions, otherwise append /api/transactions
-    if (baseUrl.endsWith('/api')) {
+    if (baseUrl.endsWith("/api")) {
       return `${baseUrl}/transactions`;
     }
     // For emulator or other cases, append /api/transactions
@@ -46,7 +46,7 @@ export const getApiEndpoint = (endpoint) => {
   if (baseUrl) {
     // Check if base URL already ends with /api (Firebase Cloud Function)
     // If so, just append endpoint, otherwise append /api/endpoint
-    if (baseUrl.endsWith('/api')) {
+    if (baseUrl.endsWith("/api")) {
       return `${baseUrl}/${endpoint}`;
     }
     // For emulator or other cases, append /api/endpoint
