@@ -3,6 +3,16 @@ const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
 
+// Load environment variables from .env.local if it exists (for local development)
+if (process.env.NODE_ENV !== "production") {
+  try {
+    const path = require("path");
+    require("dotenv").config({ path: path.join(__dirname, ".env.local") });
+  } catch (e) {
+    // .env.local might not exist, that's okay
+  }
+}
+
 // Initialize Firebase Admin
 admin.initializeApp();
 
@@ -71,4 +81,3 @@ app.get("/health", (req, res) => {
 
 // Export the Express app as a Firebase Cloud Function
 exports.api = functions.https.onRequest(app);
-

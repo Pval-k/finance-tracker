@@ -16,5 +16,3 @@ firebase-debug.*.log
 .firebase/
 .firebaserc.local
 
-# Documentation
-INTERVIEW_PREP.md

@@ -1,4 +1,18 @@
 {
+  "functions": [
+    {
+      "source": "backend",
+      "codebase": "default"
+    }
+  ],
+  "emulators": {
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": false
+    }
+  },
   "hosting": {
     "public": "frontend/build",
     "ignore": [
