@@ -18,26 +18,9 @@ admin.initializeApp();
 
 const app = express();
 
-// CORS configuration - must be before other middleware
-// Allow all origins for Firebase Hosting (production) and localhost (development)
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    // Allow all origins (can be restricted later if needed)
-    callback(null, true);
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
-
-app.use(cors(corsOptions));
-
-// Explicitly handle OPTIONS requests for all routes (CORS preflight)
-app.options("*", cors(corsOptions));
+// CORS - Simple configuration to allow all origins
+// Required because frontend (Firebase Hosting) and backend (Cloud Functions) are different domains
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.json());
 
