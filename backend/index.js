@@ -14,7 +14,19 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Initialize Firebase Admin
-admin.initializeApp();
+// In Cloud Functions, this automatically uses the Firebase project context
+// In local development, it uses default credentials or service account
+try {
+  admin.initializeApp();
+  console.log("Firebase Admin initialized for project:", admin.app().options.projectId || "default");
+} catch (error) {
+  // App might already be initialized (e.g., in Cloud Functions environment)
+  if (error.code !== "app/already-initialized") {
+    console.error("Firebase Admin initialization error:", error);
+    throw error;
+  }
+  console.log("Firebase Admin already initialized");
+}
 
 const app = express();
 
@@ -81,20 +93,45 @@ const verifyToken = async (req, res, next) => {
     try {
       const decodedToken = await admin.auth().verifyIdToken(token);
       req.userId = decodedToken.uid;
+      console.log("Token verified for user:", req.userId);
       next();
     } catch (error) {
+      console.error("Token verification failed:", {
+        code: error.code,
+        message: error.message,
+        tokenLength: token ? token.length : 0,
+        tokenPrefix: token ? token.substring(0, 30) + "..." : "null",
+        firebaseProject: admin.app().options.projectId || "unknown",
+      });
+      
       if (error.code === "auth/id-token-expired") {
         return res.status(401).json({
           error: "Unauthorized: Token expired",
+          code: error.code,
         });
       }
       if (error.code === "auth/id-token-revoked") {
         return res.status(401).json({
           error: "Unauthorized: Token revoked",
+          code: error.code,
+        });
+      }
+      if (error.code === "auth/argument-error") {
+        return res.status(401).json({
+          error: "Unauthorized: Invalid token format",
+          code: error.code,
+        });
+      }
+      if (error.code === "auth/project-not-found") {
+        return res.status(401).json({
+          error: "Unauthorized: Firebase project configuration error",
+          code: error.code,
         });
       }
       return res.status(401).json({
         error: "Unauthorized: Invalid token",
+        code: error.code || "unknown",
+        message: error.message,
       });
     }
   } catch (error) {
