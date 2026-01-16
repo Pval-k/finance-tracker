@@ -35,6 +35,7 @@ const BudgetCard = ({ transactions, budget, timeFilter, onBudgetUpdate }) => {
     return transactions
       .filter((t) => t.type === "expense" && !hiddenTransactions.has(t._id))
       .reduce((sum, t) => sum + t.amount, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, refreshKey]);
 
   // Use current budget for calculations (not the editing value)

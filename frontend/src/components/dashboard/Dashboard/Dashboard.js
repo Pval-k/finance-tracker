@@ -71,6 +71,7 @@ const Dashboard = () => {
     // Load budget when time filter or selected date changes
     const periodBudget = loadBudgetForPeriod(timeFilter, selectedDate);
     setBudget(periodBudget);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, timeFilter, selectedDate]);
 
   const fetchTransactions = async () => {

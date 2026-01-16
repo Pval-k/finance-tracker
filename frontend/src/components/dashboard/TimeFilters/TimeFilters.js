@@ -17,27 +17,6 @@ const TimeFilters = ({
     { value: "year", label: "Year" },
   ];
 
-  const formatPeriod = () => {
-    const date = new Date(selectedDate);
-    switch (timeFilter) {
-      case "day":
-        return date.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
-      case "month":
-        return date.toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
-      case "year":
-        return date.getFullYear().toString();
-      default:
-        return "";
-    }
-  };
-
   const handlePrevious = () => {
     const newDate = new Date(selectedDate);
     switch (timeFilter) {
@@ -52,6 +31,8 @@ const TimeFilters = ({
         break;
       case "year":
         newDate.setFullYear(newDate.getFullYear() - 1);
+        break;
+      default:
         break;
     }
     onPeriodChange(newDate);
@@ -71,6 +52,8 @@ const TimeFilters = ({
         break;
       case "year":
         newDate.setFullYear(newDate.getFullYear() + 1);
+        break;
+      default:
         break;
     }
     onPeriodChange(newDate);

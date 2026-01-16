@@ -9,7 +9,6 @@ const BudgetInsights = ({ transactions, timeFilter, selectedDate, budget }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [usingAI, setUsingAI] = useState(true);
 
   const fetchInsights = async () => {
     if (!budget || budget === 0) {
@@ -59,6 +58,7 @@ const BudgetInsights = ({ transactions, timeFilter, selectedDate, budget }) => {
 
   useEffect(() => {
     fetchInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions.length, timeFilter, selectedDate, budget]);
 
   if (!budget || budget === null || budget === 0) {

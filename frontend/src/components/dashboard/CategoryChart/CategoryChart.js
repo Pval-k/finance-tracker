@@ -66,6 +66,7 @@ const CategoryChart = ({ transactions }) => {
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, refreshKey]);
 
   if (categoryData.length === 0) {
