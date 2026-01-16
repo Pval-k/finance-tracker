@@ -1554,6 +1554,47 @@ function getMongoClient() {
 
 ---
 
+### Firebase Deployment Commands Explained
+
+**What is `firebase deploy --only functions`?**
+
+`firebase deploy --only functions` is a Firebase CLI command that deploys only your backend code (Cloud Functions) to Google Cloud Platform, without redeploying the frontend.
+
+**Why we use it during development:**
+
+1. **Code changes require redeployment**: When you fix a bug in `backend/index.js` or any backend file, those changes only exist on your local computer. To make them available in production (the live site), you must "deploy" (upload) the updated code to Firebase's servers.
+
+2. **Fast iteration**: Using `--only functions` is faster than `firebase deploy` (which deploys both frontend and backend) because:
+   - It only uploads the `backend/` folder (~50-60 KB)
+   - It doesn't rebuild the React frontend (which takes much longer)
+   - It doesn't redeploy Firebase Hosting
+
+3. **Debugging workflow**: During bug fixes, the typical workflow is:
+   - Fix code in `backend/index.js`
+   - Run `firebase deploy --only functions` to upload the fix
+   - Wait ~30-60 seconds for deployment to complete
+   - Test the live site to verify the fix worked
+   - If bug persists, repeat the cycle
+
+**Other Firebase deployment commands:**
+
+- `firebase deploy` - Deploys everything (functions + hosting)
+- `firebase deploy --only hosting` - Only deploys the frontend (React app)
+- `firebase deploy --only functions` - Only deploys the backend (Cloud Functions)
+
+**What happens during deployment:**
+
+1. Firebase packages your `backend/` folder into a ZIP file
+2. Uploads it to Google Cloud Storage
+3. Google Cloud Functions builds your Node.js application
+4. Updates the live function with your new code
+5. All new requests use the updated code
+
+**Interview answer:**
+"During development, I frequently use `firebase deploy --only functions` to deploy backend fixes. This command uploads only the Cloud Functions code (~50KB) rather than the entire project, making iterations faster. When debugging production issues, I follow an iterative cycle: identify the bug, fix the code locally, deploy with this command, test the live site, and repeat if needed. This allows me to quickly verify fixes without redeploying the frontend, which takes longer to build."
+
+---
+
 ### Summary: How These Bugs Were Fixed
 
 **The Debugging Process:**
