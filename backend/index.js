@@ -18,11 +18,23 @@ admin.initializeApp();
 
 const app = express();
 
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, {
+    origin: req.headers.origin,
+    'access-control-request-method': req.headers['access-control-request-method']
+  });
+  next();
+});
+
 // CORS - Simple configuration to allow all origins
 // Required because frontend (Firebase Hosting) and backend (Cloud Functions) are different domains
 app.use(cors({ origin: true, credentials: true }));
 
 app.use(express.json());
+
+// Explicitly handle OPTIONS for all routes before auth
+app.options('*', cors({ origin: true, credentials: true }));
 
 // Import route handlers
 const transactionsRoutes = require("./routes/transactions");
