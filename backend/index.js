@@ -143,8 +143,10 @@ const verifyToken = async (req, res, next) => {
 };
 
 // API Routes
-app.use("/api/transactions", verifyToken, transactionsRoutes);
-app.use("/api/budget-insights", verifyToken, budgetInsightsRoutes);
+// Note: Routes don't include "/api" prefix because the Cloud Function itself is named "api"
+// Full path: https://...cloudfunctions.net/api/transactions
+app.use("/transactions", verifyToken, transactionsRoutes);
+app.use("/budget-insights", verifyToken, budgetInsightsRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
