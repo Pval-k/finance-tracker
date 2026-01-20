@@ -68,6 +68,12 @@ app.use(express.json());
 const transactionsRoutes = require("./routes/transactions");
 const budgetInsightsRoutes = require("./routes/budget-insights");
 
+// Log that routes are loaded
+console.log("Routes loaded:", {
+  transactionsRoutes: typeof transactionsRoutes,
+  budgetInsightsRoutes: typeof budgetInsightsRoutes,
+});
+
 // Middleware to verify Firebase token
 // Skip token verification for OPTIONS requests (CORS preflight)
 const verifyToken = async (req, res, next) => {
@@ -148,6 +154,12 @@ const verifyToken = async (req, res, next) => {
 // API Routes
 // Note: Routes don't include "/api" prefix because the Cloud Function itself is named "api"
 // Full path: https://...cloudfunctions.net/api/transactions
+
+// Test route to verify routing works
+app.get("/test", (req, res) => {
+  res.json({ message: "Test route works", path: req.path });
+});
+
 app.use("/transactions", verifyToken, transactionsRoutes);
 app.use("/budget-insights", verifyToken, budgetInsightsRoutes);
 
