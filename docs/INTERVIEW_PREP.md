@@ -1699,3 +1699,214 @@ A: "I implemented a fallback system. If the OpenAI API fails or returns an error
 
 **Q: How did you optimize performance?**
 A: "I used several strategies: client-side caching for budgets in localStorage to reduce server requests, efficient MongoDB queries with indexed userId fields, CDN caching headers for static assets, and React code splitting to reduce initial load time."
+
+---
+
+## Resume Questions - Interview Preparation
+
+This section contains potential interview questions for each bullet point on your resume, with detailed answers based on your actual implementation.
+
+### Bullet 1: Architecture and Multi-Tenancy
+
+**Resume Bullet:**
+"Architected and deployed a multi-tenant full-stack serverless app with React frontend and Node.js backend (Firebase Cloud Functions), implementing RESTful CRUD APIs, JWT/Google OAuth authentication, and strict user-level data isolation."
+
+**Q: What does 'multi-tenant' mean in your application, and how did you implement it?**
+
+A: "Multi-tenant means multiple users can use the same application instance while their data remains completely isolated. I implemented this using a `userId` field in every database document. When a user authenticates, their Firebase user ID is extracted from the JWT token server-side. Every database query filters by this `userId`, ensuring users can only access their own transactions. I never trust client-provided user IDs - all queries use the `userId` from the verified JWT token, which prevents users from accessing other users' data even if they try to manipulate API requests."
+
+**Q: Why did you choose a serverless architecture, and what are the trade-offs?**
+
+A: "I chose serverless because it eliminates server management, provides automatic scaling, and follows a pay-per-use model. The backend runs on Firebase Cloud Functions, which automatically scales based on traffic - if 100 users hit the API simultaneously, Firebase spins up more instances without any configuration. The trade-offs include cold starts (initial function invocation can take a second), but for this application the benefits outweigh the costs. Also, there's vendor lock-in with Firebase, but the convenience and built-in features like authentication made it worth it."
+
+**Q: How did you implement RESTful APIs? What makes them RESTful?**
+
+A: "I used Express.js to create RESTful endpoints following REST principles: resource-based URLs (`/transactions`), HTTP methods aligned with operations (GET for read, POST for create, PUT for update, DELETE for delete), standard HTTP status codes (200 for success, 400 for bad request, 401 for unauthorized, 500 for server errors), and JSON request/response format. Each endpoint does one thing well - `/transactions` handles all transaction operations, and the HTTP method determines the action. This makes the API predictable and easy to use."
+
+**Q: Explain your authentication flow from login to API request.**
+
+A: "When a user logs in through Firebase Authentication (email/password or Google OAuth), Firebase generates a JWT ID token. This token contains the user's ID and is signed by Firebase. The frontend stores this token and includes it in every API request via the `Authorization: Bearer <token>` header. On the backend, my Express middleware intercepts every request, extracts the token, and verifies it using Firebase Admin SDK. If valid, it extracts the `userId` and attaches it to the request object. If invalid or missing, it returns 401 Unauthorized. This ensures every API call is authenticated before processing."
+
+**Q: How did you implement Google OAuth?**
+
+A: "I used Firebase Authentication's `signInWithPopup` method with `GoogleAuthProvider`. When the user clicks 'Sign in with Google', Firebase handles the OAuth flow - redirecting to Google, obtaining consent, and returning to my app with the user's profile. Firebase then generates a JWT token just like email/password authentication. The backend doesn't distinguish between authentication methods - it just verifies the JWT token. This unified approach means I can add more OAuth providers (Facebook, GitHub, etc.) without changing backend code."
+
+**Q: What is user-level data isolation, and how is it different from authentication?**
+
+A: "Authentication ensures a user is who they claim to be. Data isolation ensures authenticated users can only access their own data. Even if someone is authenticated, they shouldn't be able to see another user's transactions. I implement this by filtering all database queries by `userId`. For example, when fetching transactions, the query is `collection.find({ userId: req.userId })`, not just `collection.find({})`. The `userId` comes from the verified JWT token server-side, so clients can't manipulate it. This is critical for financial data where privacy is paramount."
+
+**Q: How did you deploy the serverless backend to Firebase Cloud Functions?**
+
+A: "I wrote an Express.js application that exports a single function: `exports.api = functions.https.onRequest(app)`. This wraps the entire Express app as a Cloud Function named `api`. To deploy, I use `firebase deploy --only functions`, which packages the backend code, uploads it to Firebase, and creates an HTTPS endpoint. The function automatically handles routing, authentication middleware, and database connections. The deployment process also handles environment variables through `firebase functions:config:set` for production secrets like MongoDB URI and OpenAI API key."
+
+---
+
+### Bullet 2: Performance Optimization and Metrics
+
+**Resume Bullet:**
+"Achieved <100ms response times for monthly queries and supported 2,000+ transactions/sec by optimizing MongoDB Atlas queries and aggregation pipelines for scalable CRUD operations."
+
+**Q: How did you measure these performance metrics?**
+
+A: "I created a performance testing script (`tests/test-performance.js`) that connects directly to MongoDB Atlas and measures actual query times. For the 2,000+ transactions/sec metric, I inserted 1,000 test transactions and measured the time taken, then calculated the rate. For monthly queries, I tested date range queries filtering by `userId` and date, measuring the response time. I used `Date.now()` before and after each operation to get precise millisecond measurements. The script also tests aggregation pipelines for category totals, which are used for the charts."
+
+**Q: What specific optimizations did you make to achieve <100ms response times?**
+
+A: "The key optimization was creating an index on the `userId` field in MongoDB. Without an index, MongoDB would scan every document to find matching users. With an index, it can quickly locate all documents for a specific user. I also optimized date range queries by storing dates as 'YYYY-MM-DD' strings, which allows efficient range queries with `$gte` and `$lt` operators. For aggregation pipelines, I use `$match` early in the pipeline to filter by `userId` first, reducing the dataset before performing expensive operations like `$group`."
+
+**Q: How do you handle 2,000+ transactions/second? What if traffic spikes higher?**
+
+A: "The architecture scales automatically because it's serverless. Firebase Cloud Functions automatically scales horizontally - if traffic increases, Firebase spins up more function instances. MongoDB Atlas also scales based on usage. I tested the database layer independently and confirmed it can handle high write rates. In practice, if traffic spikes beyond what one MongoDB instance can handle, MongoDB Atlas can auto-scale or I could implement connection pooling. The key is that the serverless architecture removes the bottleneck of a fixed number of servers."
+
+**Q: What are aggregation pipelines, and why are they important for performance?**
+
+A: "Aggregation pipelines in MongoDB allow you to process documents in stages, like a data processing pipeline. For example, to calculate category totals, I use: `$match` to filter by `userId` and `type: 'expense'`, then `$group` to sum amounts by category. This is more efficient than fetching all transactions and processing them in application code because MongoDB does the aggregation in the database, reducing data transfer and leveraging database optimizations. I use aggregation for the budget insights feature to calculate weekly spending patterns."
+
+**Q: Did you do any frontend performance optimizations?**
+
+A: "Yes, several. I use `useMemo` hooks to memoize expensive calculations like filtering transactions by date range and calculating category totals. This prevents recalculating on every render. I also cache budget data in localStorage to avoid unnecessary API calls. The frontend is served via Firebase Hosting's CDN, which distributes static assets globally for faster load times. React's built-in code splitting helps reduce initial bundle size."
+
+**Q: How do you monitor performance in production?**
+
+A: "I have Web Vitals tracking set up (LCP, FCP, FID, CLS, TTFB) that measures real user metrics. For backend performance, I check Firebase Functions logs which show execution times. MongoDB Atlas provides query performance metrics in their dashboard. During development, I use the performance testing script to benchmark database operations. For production monitoring, I could add more detailed logging or use Firebase Performance Monitoring for end-to-end request tracing."
+
+---
+
+### Bullet 3: AI/LLM Integration
+
+**Resume Bullet:**
+"Delivered LLM-powered budget insights (OpenAI GPT-4o-mini) with structured prompt engineering, actionable recommendations, and fallback rule-based logic, while validating AI-generated outputs."
+
+**Q: Why did you choose GPT-4o-mini over other models?**
+
+A: "GPT-4o-mini is a cost-effective model that still provides high-quality responses. For budget insights, I don't need the full reasoning capabilities of GPT-4, and GPT-4o-mini is significantly cheaper per token. It's fast enough for near-real-time responses and produces structured output that I can parse. The quality is sufficient for personalized spending recommendations, and the lower cost makes it viable for production use without worrying about API costs."
+
+**Q: What does 'structured prompt engineering' mean, and how did you implement it?**
+
+A: "Structured prompt engineering means crafting prompts that elicit consistent, parseable responses from the LLM. Instead of asking vague questions, I send detailed prompts with specific instructions. For example, I include the user's spending data (totals, categories, weekly breakdowns), budget information, and explicit instructions like 'Provide 2-3 actionable insights' and 'Format as a JSON array'. I also use few-shot examples to guide the model's response format. This ensures the AI returns data I can reliably parse and display, rather than free-form text that might break the UI."
+
+**Q: How do you validate AI-generated outputs?**
+
+A: "I validate AI responses at multiple levels. First, I check if the response is valid JSON and can be parsed. Then I validate the structure - does it have the expected fields? Are insights in an array? Are they strings? I also check response length to prevent extremely long outputs that would break the UI. If any validation fails, I immediately fall back to rule-based insights. Additionally, I sanitize the content before displaying it to prevent XSS attacks, even though the output is from a trusted source."
+
+**Q: Explain your fallback system. Why is it necessary?**
+
+A: "The fallback system provides rule-based insights when the AI API fails. This could happen due to API rate limits, network issues, API key expiration, or budget constraints. The fallback analyzes spending data using predefined rules - for example, if discretionary spending (Entertainment, Shopping) exceeds a threshold, it recommends reducing those categories. I calculate weekly spending patterns and compare current vs previous period spending. This ensures users always get insights, maintaining a consistent user experience even when external APIs are unavailable."
+
+**Q: How do you handle AI API failures gracefully?**
+
+A: "I wrap all OpenAI API calls in try-catch blocks. If the API throws an error (network timeout, rate limit, authentication failure), I catch it, log the error, and immediately invoke the fallback system. The frontend doesn't need to know whether insights came from AI or rules - it just displays the insights array. I also set reasonable timeouts to prevent users from waiting too long if the API is slow. Error handling is critical for production reliability."
+
+**Q: What data do you send to the AI, and how do you protect user privacy?**
+
+A: "I send anonymized spending statistics: total amounts, category breakdowns, weekly patterns, and budget information. I don't send individual transaction details or any personally identifiable information. The data is financial aggregates that can't be used to identify the user. Since the API call happens server-side, user data never leaves my secure backend environment. The AI response is also processed server-side before being sent to the frontend."
+
+**Q: How do you ensure AI recommendations are actionable?**
+
+A: "I structure prompts to ask for specific, actionable recommendations rather than generic advice. For example, instead of 'You're spending too much', the AI should say 'Reduce Entertainment spending by $50/week by limiting dining out to 2 times per week'. I also provide context about discretionary vs essential spending categories, which helps the AI make relevant suggestions. The frontend displays insights in a clear format, making it easy for users to understand and act on recommendations."
+
+---
+
+### Bullet 4: CI/CD and Problem-Solving
+
+**Resume Bullet:**
+"Automated CI/CD pipeline with GitHub Actions, deploying frontend/backend to Firebase Hosting + Cloud Functions, resolving 8 production-level issues including CORS, environment variable precedence, API route mismatches, timezone parsing, and MongoDB/Cloud Function access."
+
+**Q: How did you build the CI/CD pipeline? Walk me through the workflow.**
+
+A: "I created a GitHub Actions workflow file (`.github/workflows/firebase-deploy.yml`) that triggers on pushes to the main branch. The workflow: (1) checks out the code, (2) sets up Node.js 20, (3) installs Firebase CLI globally, (4) installs frontend and backend dependencies, (5) builds the React frontend with environment variables from GitHub Secrets, (6) lints the backend code, and (7) deploys to Firebase Hosting if it's a push to main (not a pull request). The frontend build process injects Firebase config and API URLs from secrets at build time, creating a production-ready bundle."
+
+**Q: How do you manage environment variables in CI/CD?**
+
+A: "I use GitHub Secrets to store sensitive values like Firebase API keys, MongoDB URI, and OpenAI API key. These are encrypted and only accessible during the workflow run. For the frontend build, I set environment variables in the workflow file that reference secrets like `${{ secrets.REACT_APP_FIREBASE_API_KEY }}`. These are injected during `npm run build`, so they're baked into the production bundle. For backend deployment, I use `firebase functions:config:set` to store secrets in Firebase, which are accessible via `functions.config()` at runtime."
+
+**Q: What was the CORS issue, and how did you solve it?**
+
+A: "CORS (Cross-Origin Resource Sharing) errors occurred because the frontend (on Firebase Hosting) and backend (on Cloud Functions) are different domains. Browsers block cross-origin requests unless the server explicitly allows them. The issue was that Firebase was blocking OPTIONS preflight requests before they reached my Express app. I solved it by: (1) configuring Express CORS middleware with `cors({ origin: true, credentials: true })`, (2) handling OPTIONS requests at the very top of the Express app before any other middleware, and (3) ensuring the middleware explicitly allows the necessary headers (Authorization, Content-Type). I also configured Cloud Functions IAM permissions to allow public invocation."
+
+**Q: Explain the environment variable precedence issue.**
+
+A: "The frontend was always connecting to the production API URL even during local development. The problem was the order of checks in my API configuration code. I was checking `REACT_APP_API_URL` (production) before `REACT_APP_USE_EMULATOR` (local development flag). I fixed it by reordering the conditionals to check the emulator flag first. Now, if `REACT_APP_USE_EMULATOR=true`, it uses the local emulator URL regardless of other settings. This ensures the correct environment is used based on context."
+
+**Q: What was the API route mismatch problem?**
+
+A: "I was getting 404 errors on all API endpoints after deployment. The issue was path construction. Firebase Cloud Functions strip the function name from the URL path before passing it to Express. My function is named `api`, so the URL `...cloudfunctions.net/api/transactions` becomes `/transactions` in Express. But I had defined routes as `/api/transactions` in Express, creating a mismatch. I fixed it by removing the `/api` prefix from all Express route definitions, since the function name already provides it. The full path is: function name (`api`) + Express route (`/transactions`) = `/api/transactions`."
+
+**Q: How did you fix the timezone parsing issue?**
+
+A: "Dates were stored as 'YYYY-MM-DD' strings, but when converting to Date objects for filtering, JavaScript timezone conversions could shift dates by a day. For example, '2024-01-15' might become January 14th or 16th depending on timezone. I fixed it by using local date methods (`getFullYear()`, `getMonth()`, `getDate()`) instead of UTC methods, and ensuring all date comparisons use the same timezone context. I also store dates as strings to avoid timezone confusion entirely - only converting to Date objects when necessary for calculations."
+
+**Q: What were the MongoDB and Cloud Function access issues?**
+
+A: "After deploying, the backend couldn't connect to MongoDB Atlas because Atlas has Network Access settings that block connections by default. Firebase Cloud Functions have dynamic IP addresses that weren't whitelisted. I solved this by adding `0.0.0.0/0` to MongoDB Atlas Network Access, allowing connections from any IP (security is maintained through username/password authentication in the connection string). For Cloud Functions, I configured IAM permissions to allow `allUsers` with the `Cloud Functions Invoker` role, making the function publicly accessible for CORS preflight requests."
+
+**Q: How do you debug production issues?**
+
+A: "I use Firebase Functions logs (`firebase functions:log`) to see real-time execution logs, errors, and execution times. I also added comprehensive logging in my Express middleware to track request paths, authentication status, and errors. For frontend issues, I use browser DevTools Network tab to inspect API requests and responses. I also check MongoDB Atlas logs for database connection issues. The key is having visibility into each layer - frontend, API, and database - to quickly identify where problems occur."
+
+**Q: How do you test before deploying to production?**
+
+A: "I use Firebase emulators for local testing - they simulate Cloud Functions and Firebase services locally. I test the full flow: frontend connects to local emulator backend, which connects to MongoDB Atlas (same as production). I also run the performance testing script against the database to catch performance regressions. Before deploying, I verify the code builds successfully and passes linting checks. In the CI/CD pipeline, I run linting on every push, catching issues before they reach production."
+
+---
+
+### Bullet 5: Frontend UX and Features
+
+**Resume Bullet:**
+"Enhanced frontend UX and functionality with responsive dark/light theme, multi-period budget tracking, real-time Recharts visualizations, and client-side PDF report generation, improving usability for end users."
+
+**Q: How did you implement the dark/light theme system?**
+
+A: "I created a `ThemeContext` using React Context API that manages theme state ('light' or 'dark'). The theme is persisted in localStorage so it survives page refreshes. When the theme changes, I update a `data-theme` attribute on the HTML element. CSS uses attribute selectors like `[data-theme="dark"]` to apply different color schemes. I defined CSS variables for colors (--bg-primary, --text-primary, etc.) that change based on the theme attribute. This makes it easy to switch themes instantly without reloading, and all components automatically use the correct colors."
+
+**Q: What is multi-period budget tracking, and how does it work?**
+
+A: "Users can set independent budgets for Day, Week, Month, and Year time periods. Each period maintains its own budget value. I store budgets in localStorage with unique keys like `budget-day-2024-01-15`, `budget-week-2024-01-14`, `budget-month-2024-01`, and `budget-year-2024`. When users switch time periods or navigate to different dates, the appropriate budget loads automatically. This allows flexible budgeting - someone might want a monthly budget of $3000 but a weekly dining budget of $150. The system tracks spending against the relevant period's budget independently."
+
+**Q: How do Recharts visualizations update in real-time?**
+
+A: "Recharts components receive transaction data as props. When a transaction is created, updated, or deleted, the parent component (Dashboard) refetches transactions from the API and updates its state. React's reactivity means when state changes, child components re-render with new data. Recharts automatically redraws the chart with updated values. I use `useMemo` to efficiently recalculate category totals when transactions change, ensuring charts update smoothly without performance issues. The charts are responsive and adapt to screen size."
+
+**Q: Why did you choose client-side PDF generation instead of server-side?**
+
+A: "Client-side PDF generation reduces server load and provides instant feedback to users. The `jsPDF` library generates PDFs entirely in the browser, so no API calls are needed. This makes the feature faster (no network latency) and doesn't consume backend resources. The PDFs are generated on-demand when users click 'Download Report', using transaction data already loaded in the frontend. The trade-off is that large datasets might slow down the browser, but for personal finance use cases, this isn't an issue."
+
+**Q: How did you make the UI responsive?**
+
+A: "I used CSS Flexbox and media queries to create a responsive layout. The dashboard uses a grid system that adapts from multiple columns on desktop to a single column on mobile. Charts resize based on container width, and Recharts handles responsiveness automatically. I also used relative units (percentages, rem) instead of fixed pixels, and ensured touch targets are appropriately sized for mobile. The CSS variable theming system makes it easy to adjust spacing and sizing across breakpoints."
+
+**Q: What accessibility considerations did you implement?**
+
+A: "I use semantic HTML elements (buttons, forms, labels), proper form labels with `htmlFor` attributes, and keyboard navigation support. Colors have sufficient contrast ratios for readability. However, I could improve this further by adding ARIA labels, focus management, and screen reader support. For a production application, I would conduct accessibility audits and implement WCAG guidelines more comprehensively."
+
+**Q: How do you handle loading states and errors in the UI?**
+
+A: "I display loading indicators during API calls - for example, showing 'Loading insights...' while fetching AI recommendations. For errors, I show user-friendly messages like 'Failed to save transaction. Please try again.' instead of technical error codes. I use try-catch blocks around all async operations and display appropriate error messages. Empty states are handled gracefully - if there are no transactions, I show a message encouraging users to add their first transaction, rather than showing a blank page."
+
+**Q: How did you improve usability for end users?**
+
+A: "Several ways: (1) Real-time feedback - charts and budget progress update immediately when transactions change. (2) Intuitive navigation - clear buttons for 'Previous', 'Next', and 'Today' make it easy to explore different time periods. (3) Visual indicators - progress bars show budget usage at a glance, and color coding (green for income, red for expenses) makes data easy to scan. (4) Quick actions - users can edit or delete transactions with one click. (5) Helpful defaults - date picker defaults to today, categories are pre-populated with common options. All of these reduce cognitive load and make the app more user-friendly."
+
+---
+
+## General Technical Questions
+
+**Q: What was the most challenging part of this project?**
+
+A: "The most challenging part was debugging the production deployment issues, particularly the CORS and route path problems. When the backend deployed successfully but API calls failed, I had to trace the problem through multiple layers - browser CORS policies, Firebase Cloud Functions routing, Express middleware, and API endpoints. The complexity came from understanding how serverless platforms handle routing differently than traditional servers. I solved it by methodically checking each layer, reading logs, and testing incrementally until I identified the root cause."
+
+**Q: What would you do differently if you were to rebuild this?**
+
+A: "I would add comprehensive testing - unit tests for components, integration tests for API endpoints, and end-to-end tests for critical user flows. I'd also implement proper error boundaries in React to catch and handle component errors gracefully. For the database, I'd add indexes on date fields for even faster queries, and implement connection pooling. I'd use TypeScript instead of JavaScript for better type safety and fewer runtime errors. I'd also add more comprehensive monitoring and alerting for production issues."
+
+**Q: How would you scale this application to handle millions of users?**
+
+A: "The serverless architecture already handles horizontal scaling automatically, but I'd optimize further: (1) Implement caching layers - Redis for frequently accessed data, CDN for static assets. (2) Database sharding - partition MongoDB collections by userId ranges. (3) Read replicas - use MongoDB read replicas for query operations while writes go to primary. (4) Rate limiting - prevent abuse and manage costs. (5) Database indexes - ensure all query patterns have appropriate indexes. (6) Batch operations - group multiple transactions into single API calls. (7) Pagination - limit query result sizes. (8) Monitoring - comprehensive metrics and alerting to catch bottlenecks early."
+
+**Q: What security measures did you implement beyond authentication?**
+
+A: "Beyond JWT authentication: (1) Server-side validation - all input is validated on the backend, never trust client data. (2) User data isolation - every query filters by userId from verified token. (3) CORS restrictions - only allow requests from my frontend domain. (4) HTTPS only - Firebase enforces SSL/TLS. (5) Environment variable security - secrets stored in GitHub Secrets and Firebase config, never in code. (6) Input sanitization - validate and sanitize all user inputs before processing. (7) Error handling - don't expose sensitive error details to clients. For production, I'd add rate limiting, input validation libraries, and security headers."
+
+**Q: How do you stay updated with technology trends?**
+
+A: "I follow industry blogs (React blog, Firebase blog, MongoDB blog), participate in developer communities (Reddit r/webdev, Stack Overflow), watch conference talks (React Conf, Google I/O), and build side projects to experiment with new technologies. I also read documentation thoroughly when implementing features - the Firebase docs taught me a lot about serverless best practices. Continuous learning is crucial in this field, so I make time for it regularly."
